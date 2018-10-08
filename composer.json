@@ -1,0 +1,27 @@
+{
+    "name": "shulard/markdown-renderer",
+    "description": "A simple CLI wrapper to render markdown file in different formats",
+    "type": "project",
+    "require": {
+        "php": ">=7.2",
+        "league/commonmark": "^0.17.0",
+        "mnapoli/silly": "^1.7",
+        "webuni/commonmark-table-extension": "^0.8.0"
+    },
+    "require-dev": {
+        "atoum/atoum": "^3.3",
+        "squizlabs/php_codesniffer": "^3.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "MarkdownRenderer\\": "src"
+        }
+    },
+    "license": "Apache-2.0",
+    "authors": [
+        {
+            "name": "Stéphane Hulard",
+            "email": "s.hulard@chstudio.fr"
+        }
+    ]
+}
