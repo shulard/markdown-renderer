@@ -1,0 +1,70 @@
+<?php
+
+use MarkdownRenderer\HtmlRenderer;
+use Symfony\Component\Console\Output\OutputInterface;
+
+require 'vendor/autoload.php';
+
+$app = new Silly\Application();
+
+$app->command('render [file] [--format=] [--destination=] [--layout=]', function (
+    $file,
+    $format = 'html',
+    $destination = null,
+    $layout = null,
+    OutputInterface $output
+) {
+    if ($format === 'html') {
+        $converter = new HtmlRenderer;
+    } else {
+        throw new \RuntimeException('Invalid format given...');
+    }
+
+    $file = realpath($file);
+
+    $rendering = function($file, $layout, $destination) use ($converter) {
+        $content = file_get_contents($file);
+        $converted = $converter->render($content);
+
+        if ($layout) {
+            $path = __DIR__.'/layouts/'.$layout;
+            if (!is_readable($path)) {
+                throw new RuntimeException('Layout given doesn\'t exists.');
+            }
+
+            $converted = str_replace(
+                ['{%title%}', '{%content%}'],
+                [basename($file), $converted],
+                file_get_contents($path)
+            );
+        }
+
+        if ($destination) {
+            file_put_contents($destination, $converted);
+        } else {
+            $output->writeln($converted);
+        }
+    };
+
+    if (is_file($file)) {
+        $rendering($file, $layout, $destination);
+    } elseif (is_dir($file)) {
+        $iterator = new RegexIterator(
+            new RecursiveIteratorIterator(new RecursiveDirectoryIterator($file)),
+            '/^.+\.md$/i',
+            RecursiveRegexIterator::GET_MATCH
+        );
+        foreach ($iterator as $path => $spl) {
+            $final = ltrim(str_replace($file, '', $path), '/');
+            $dir = ($destination ? $destination . '/' : '').dirname($final);
+            if (!is_dir($dir)) {
+                mkdir($dir, 0777, true);
+            }
+            $rendering($path, $layout, $dir.'/'.basename($final, '.md').'.html');
+        }
+    } else {
+        throw new RuntimeException('Invalid file parameter given, must be a folder or a file.');
+    }
+});
+
+$app->run();
